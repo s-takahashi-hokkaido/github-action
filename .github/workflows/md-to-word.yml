@@ -8,6 +8,10 @@ on:
     paths:
       - '**.md'  # mdファイルが変更されたときだけ
 
+# リポジトリへの書き込み権限を付与
+permissions:
+  contents: write
+
 jobs:
   convert:
     runs-on: ubuntu-latest
