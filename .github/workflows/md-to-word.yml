@@ -1,0 +1,45 @@
+name: Convert Markdown to Word
+
+# pushされたときに実行
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '**.md'  # mdファイルが変更されたときだけ
+
+jobs:
+  convert:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. リポジトリのコードをチェックアウト
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 2. pandocをインストール
+      - name: Install pandoc
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y pandoc
+
+      # 3. すべてのmdファイルをdocxに変換
+      - name: Convert MD to DOCX
+        run: |
+          for file in $(find . -name "*.md" -not -path "./node_modules/*" -not -path "./.git/*"); do
+            # ファイル名から拡張子を除去
+            basename="${file%.md}"
+            # pandocで変換
+            pandoc "$file" -o "${basename}.docx"
+            echo "Converted: $file -> ${basename}.docx"
+          done
+
+      # 4. 変換したファイルをコミット＆プッシュ
+      - name: Commit and push converted files
+        run: |
+          git config --local user.email "github-actions[bot]@users.noreply.github.com"
+          git config --local user.name "github-actions[bot]"
+          git add *.docx
+          # 変更があればコミット（なければスキップ）
+          git diff --quiet && git diff --staged --quiet || git commit -m "Auto-convert: MD to Word [skip ci]"
+          git push
